@@ -1,0 +1,1115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoofyAhhGPT</title>
+<link href="https://fonts.googleapis.com/css2?family=Sour+Gummy:wght@400;700;900&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0d;
+    --sidebar-bg: #111111;
+    --chat-bg: #1a1a1a;
+    --input-bg: #2a2a2a;
+    --border: #2e2e2e;
+    --text: #ececec;
+    --text-muted: #888;
+    --accent: #ff6b35;
+    --accent2: #ffd93d;
+    --user-bubble: #1e3a5f;
+    --bot-bubble: #1e1e1e;
+    --hover: #1f1f1f;
+    --goofy: #ff6b35;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--sidebar-bg);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    padding: 12px 8px;
+    overflow-y: auto;
+    transition: transform 0.3s;
+  }
+
+  .sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 10px 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+
+  .logo-icon {
+    font-size: 28px;
+    animation: wobble 2s infinite;
+  }
+
+  @keyframes wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-10deg); }
+    75% { transform: rotate(10deg); }
+  }
+
+  .logo-text {
+    font-family: 'Sour Gummy', cursive;
+    font-size: 15px;
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    line-height: 1.2;
+  }
+
+  .new-chat-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    cursor: pointer;
+    width: 100%;
+    margin-bottom: 20px;
+    transition: background 0.2s;
+  }
+  .new-chat-btn:hover { background: var(--hover); }
+
+  .history-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    padding: 0 10px 8px;
+  }
+
+  .history-item {
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    color: var(--text-muted);
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    transition: background 0.15s, color 0.15s;
+  }
+  .history-item:hover { background: var(--hover); color: var(--text); }
+  .history-item.active { background: #222; color: var(--text); }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding-bottom: 4px;
+  }
+
+  /* MAIN */
+  #main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #topbar {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--chat-bg);
+  }
+
+  #topbar .model-name {
+    font-family: 'Sour Gummy', cursive;
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .model-badge {
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    color: #000;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* CHAT AREA */
+  #chat-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 0;
+    background: var(--chat-bg);
+    scroll-behavior: smooth;
+  }
+
+  #chat-area::-webkit-scrollbar { width: 6px; }
+  #chat-area::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+  .message-row {
+    display: flex;
+    gap: 14px;
+    padding: 10px 24px;
+    max-width: 760px;
+    margin: 0 auto;
+    width: 100%;
+    animation: fadeSlideUp 0.3s ease;
+  }
+
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .avatar.user { background: var(--user-bubble); }
+  .avatar.bot  {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    animation: none;
+  }
+  .avatar.bot.thinking { animation: spinPop 0.5s ease infinite alternate; }
+  @keyframes spinPop {
+    from { transform: scale(1) rotate(0deg); }
+    to   { transform: scale(1.15) rotate(15deg); }
+  }
+
+  .message-content {
+    flex: 1;
+    padding-top: 4px;
+    line-height: 1.65;
+    font-size: 15px;
+  }
+
+  .message-content.user { color: #d0e8ff; }
+  .message-content.bot  { color: var(--text); }
+
+  .sender-name {
+    font-size: 12px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: 0.3px;
+  }
+  .sender-name.user { color: #7ab8ff; }
+  .sender-name.bot  {
+    font-family: 'Sour Gummy', cursive;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .typing-dots span {
+    display: inline-block;
+    width: 7px; height: 7px;
+    background: var(--accent);
+    border-radius: 50%;
+    margin: 0 2px;
+    animation: bounce 0.7s infinite;
+  }
+  .typing-dots span:nth-child(2) { animation-delay: 0.15s; }
+  .typing-dots span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes bounce {
+    0%, 80%, 100% { transform: translateY(0); }
+    40%           { transform: translateY(-7px); }
+  }
+
+  /* EMPTY STATE */
+  #empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    gap: 14px;
+    color: var(--text-muted);
+  }
+  #empty-state .big-emoji { font-size: 64px; animation: wobble 2s infinite; }
+  #empty-state h2 {
+    font-family: 'Sour Gummy', cursive;
+    font-size: 26px;
+    font-weight: 900;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  #empty-state p { font-size: 14px; color: var(--text-muted); }
+
+  .suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 8px;
+  }
+  .suggestion-chip {
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 8px 16px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+  .suggestion-chip:hover {
+    background: #333;
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* INPUT AREA */
+  #input-area {
+    padding: 16px 20px 20px;
+    background: var(--chat-bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .input-wrapper {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--input-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 12px;
+    transition: border-color 0.2s;
+  }
+  .input-wrapper:focus-within { border-color: var(--accent); }
+
+  #user-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: 'Nunito', sans-serif;
+    font-size: 15px;
+    resize: none;
+    max-height: 160px;
+    line-height: 1.5;
+  }
+  #user-input::placeholder { color: var(--text-muted); }
+
+  #send-btn {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: background 0.2s, transform 0.1s;
+    font-size: 16px;
+  }
+  #send-btn:hover { background: #ff8c5a; }
+  #send-btn:active { transform: scale(0.93); }
+  #send-btn:disabled { background: #444; cursor: not-allowed; }
+
+  .input-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    margin-top: 10px;
+  }
+
+  /* Emoji pop effect on bot message */
+  .pop-in {
+    display: inline-block;
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  }
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+
+  /* ── WARNING OVERLAY ── */
+  #warning-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.88);
+    align-items: center;
+    justify-content: center;
+  }
+  #warning-overlay.show { display: flex; }
+
+  .warning-box {
+    background: #0a0a0a;
+    border: 2px solid #ff2222;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 92%;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(255,30,30,0.45), 0 0 120px rgba(255,30,30,0.15);
+    animation: boxPop 0.35s cubic-bezier(0.175,0.885,0.32,1.275);
+  }
+  @keyframes boxPop {
+    from { transform: scale(0.7); opacity: 0; }
+    to   { transform: scale(1);   opacity: 1; }
+  }
+
+  .warning-header {
+    background: #cc0000;
+    padding: 10px 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wh-dot { width: 11px; height: 11px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+  .wh-title {
+    font-family: 'Sour Gummy', cursive;
+    font-size: 12px; font-weight: 700; color: #fff;
+    letter-spacing: 1.5px; text-transform: uppercase;
+  }
+  .wh-title span { opacity: 0.65; font-size: 10px; margin-left: 6px; }
+
+  .warning-body { padding: 26px 28px 20px; text-align: center; }
+
+  .warning-icon {
+    font-size: 50px; display: block; margin-bottom: 10px;
+    animation: pulseRed 0.9s ease infinite alternate;
+  }
+  @keyframes pulseRed {
+    from { filter: drop-shadow(0 0 5px #ff2222); }
+    to   { filter: drop-shadow(0 0 18px #ff7777); }
+  }
+
+  .warning-title {
+    font-family: 'Sour Gummy', cursive;
+    font-size: 21px; font-weight: 900; color: #ff3333;
+    margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .warning-subtitle {
+    font-size: 11px; color: #ff7777;
+    letter-spacing: 2px; text-transform: uppercase; margin-bottom: 20px;
+  }
+
+  .warning-log {
+    background: #0d0d0d; border: 1px solid #1e1e1e;
+    border-radius: 8px; padding: 13px 15px;
+    text-align: left;
+    font-family: 'Courier New', monospace;
+    font-size: 11.5px; color: #999; line-height: 1.9;
+    margin-bottom: 18px;
+  }
+  .log-line { display: block; }
+  .log-key  { color: #ff6666; }
+  .log-val  { color: #6dff6d; }
+  .log-blink {
+    display: inline-block; width: 7px; height: 13px;
+    background: #6dff6d; vertical-align: middle; margin-left: 2px;
+    animation: blink 0.7s step-end infinite;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .warning-msg {
+    font-size: 13px; color: #bbb; line-height: 1.65; margin-bottom: 20px;
+  }
+  .warning-msg strong { color: #ff5555; }
+
+  .warning-dismiss {
+    background: #cc0000; color: #fff; border: none;
+    border-radius: 8px; padding: 10px 28px;
+    font-family: 'Sour Gummy', cursive;
+    font-size: 14px; font-weight: 700; cursor: pointer;
+    transition: background 0.2s, transform 0.1s; letter-spacing: 0.5px;
+  }
+  .warning-dismiss:hover  { background: #ee2222; }
+  .warning-dismiss:active { transform: scale(0.96); }
+
+  .warning-fine-print {
+    font-size: 10px; color: #333; margin-top: 12px; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div id="sidebar">
+  <div class="sidebar-header">
+    <span class="logo-icon">🤪</span>
+    <div class="logo-text">GoofyAhh<br>GPT</div>
+  </div>
+
+  <button class="new-chat-btn" onclick="newChat()">
+    ✏️ New Goofy Chat
+  </button>
+
+  <div class="history-label">Chat History</div>
+  <div id="history-list"></div>
+
+  <div class="sidebar-footer">
+    Powered by pure goofiness 🧠💨
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="main">
+  <div id="topbar">
+    <span class="model-name">GoofyAhhGPT</span>
+    <span class="model-badge">GOOFY-4o 🤡</span>
+  </div>
+
+  <div id="chat-area">
+    <div id="empty-state">
+      <div class="big-emoji">🤪</div>
+      <h2>GoofyAhhGPT</h2>
+      <p>The world's silliest AI. Ask it anything. Regret nothing.</p>
+      <div class="suggestions">
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">What is 2 + 2?</div>
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">Why is the sky blue?</div>
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">Tell me a joke</div>
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">What should I eat today?</div>
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">How do I become smart?</div>
+        <div class="suggestion-chip" onclick="sendSuggestion(this)">What is the meaning of life?</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="input-area">
+    <div class="input-wrapper">
+      <textarea id="user-input" rows="1" placeholder="Ask GoofyAhhGPT anything... 🤡" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
+      <button id="send-btn" onclick="sendMessage()" title="Send">➤</button>
+    </div>
+    <div class="input-footer">GoofyAhhGPT may produce responses that make zero sense. Which is the point. 🎉</div>
+  </div>
+</div>
+
+<!-- WARNING OVERLAY -->
+<div id="warning-overlay">
+  <div class="warning-box">
+    <div class="warning-header">
+      <div class="wh-dot"></div>
+      <div class="wh-dot"></div>
+      <div class="wh-dot"></div>
+      <div class="wh-title">⚠ GoofyAhhGPT Security Alert <span>v2.0.1</span></div>
+    </div>
+    <div class="warning-body">
+      <span class="warning-icon">🚨</span>
+      <div class="warning-title">INAPPROPRIATE INPUT DETECTED</div>
+      <div class="warning-subtitle">— Incident Report #<span id="warn-incident">000000</span> —</div>
+      <div class="warning-log">
+        <span class="log-line"><span class="log-key">STATUS     </span> <span class="log-val">⚠ FLAGGED</span></span>
+        <span class="log-line"><span class="log-key">TIMESTAMP  </span> <span class="log-val" id="warn-time">--</span></span>
+        <span class="log-line"><span class="log-key">IP ADDRESS </span> <span class="log-val" id="warn-ip">TRACING...</span></span>
+        <span class="log-line"><span class="log-key">LOCATION   </span> <span class="log-val" id="warn-loc">TRIANGULATING...<span class="log-blink"></span></span></span>
+        <span class="log-line"><span class="log-key">REPORT TO  </span> <span class="log-val">MOM &amp; DAD 👨‍👩‍👧</span></span>
+      </div>
+      <div class="warning-msg">
+        Your message contained <strong>bad language</strong> and has been
+        <strong>logged, recorded, and reported</strong> to your parents,
+        your teacher, your principal, and also that one neighbour
+        who tells on everyone. 🏘️<br><br>
+        Your GPS coordinates are being <strong>shared in real time</strong>
+        with every adult within a 5km radius. 📡
+      </div>
+      <button class="warning-dismiss" onclick="dismissWarning()">
+        😭 I'M SORRY I WILL NEVER DO IT AGAIN
+      </button>
+      <div class="warning-fine-print">
+        * This is a joke. No data is collected. No one was actually notified.
+        But seriously — keep it clean! 😇
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────
+//  THE GOOFY AHH RESPONSES (350+ with full Gen Z/A/B slang)
+// ─────────────────────────────────────────────
+const goofyResponses = [
+  // ── CLASSICS (kept) ──
+  "bro asked ME that? i was literally just eating a crayon 🖍️",
+  "according to my calculations... 🍕 pizza. the answer is always pizza.",
+  "i would answer but my brain just left the building 🚶‍♂️💨",
+  "WAIT WAIT WAIT— ok i forgot. what were we talking about 😭",
+  "the ancient prophecy says: go touch some grass first 🌱",
+  "i ran the numbers and the numbers said 'lol no' 💀",
+  "hold on let me ask my pet rock... ...he says 'duh' 🪨",
+  "yes. definitely yes. wait no. actually, banana. 🍌",
+  "ERROR 404: Braincell not found 🧠❌",
+  "why are you asking ME, i trip over flat surfaces 😭🚶",
+  "i consulted the magic 8-ball and it said 'ask someone smarter' 🎱",
+  "the answer is 7. don't ask why. it's always 7. 7️⃣",
+  "i was going to respond but then i sneezed and forgot everything 🤧",
+  "sir/ma'am this is a Wendy's 🍔",
+  "according to my research: skibidi 🚽",
+  "i literally cannot comprehend this rn my brain is running on 2% battery 🪫",
+  "my honest response: 🥴",
+  "the algorithm says: do a little spin 💃",
+  "i'd tell you but then we'd BOTH be confused 🤪",
+  "the correct answer is: have you tried listening to the Spongebob theme song? 🧽",
+  "yes and also no and also maybe and also i need a snack 🍪",
+  "my brain cells are currently on vacation, please leave a message 📨",
+  "honestly? pineapple belongs on pizza and that's my final answer 🍍🍕",
+  "beep boop computing... *explosion* 💥 never mind",
+  "breaking news: i have absolutely no clue 📰",
+  "*stares at you in confused* 👁️👁️",
+  "i simulated the entire universe and the answer is: go drink some water 💧",
+  "the vibes say: do a backflip 🤸 and figure it out yourself",
+  "ok real talk: the answer is hidden under your couch cushion 🛋️",
+  "i asked my cat and she knocked the answer off the table 🐱📚",
+  "i processed your question and produced a cloud ☁️ you're welcome",
+  "the correct move here is to take a 4 hour nap and reconsider 😴",
+  "my response self-destructed upon arrival 💣",
+  "YOOOO okay so— haha just kidding i have no idea 💀",
+  "i peaked in kindergarten and it's been downhill since 🎨😭",
+  "bold of you to assume i've been paying attention 😇",
+  "i consulted the encyclopedia and it also started crying 📚😭",
+  "okay smartypants: 42. that's the answer. don't ask questions about the answer 🔢",
+  "CALCULATING... *smoke comes out* ...the answer is whoops 💨",
+  "what if— and hear me out— what if nobody knows 🤫",
+  "lol imagine knowing things 😂",
+  "my response was a butterfly and it flew away 🦋",
+  "my three brain cells held a vote and the result was: idk man 🗳️",
+  "the universe typed out a long response and then deleted it 🌌",
+  "the answer is: please hydrate 💧 nothing else matters",
+  "after extensive deliberation: ¯\\_(ツ)_/¯",
+  "i started answering, got distracted by a bird, and now we're here 🐦",
+  "ngl that question hit different and by that i mean it hit me in the confusion 🤕",
+  "i'm just a little guy. i don't have answers, only vibes ✨",
+  "my source is: trust me bro 🤝",
+  "the answer is protected by a dragon and i am scared of dragons 🐉",
+  "that's the neat part— you DON'T get an answer 😈",
+  "reality is a simulation and so is my answer 🖥️",
+  "my sources say 'corn' and i'm choosing to trust them 🌽",
+  "i have compiled all the data and concluded: go pet a dog 🐶",
+  "i once knew the answer but traded it for a juice box 🧃 worth it",
+  "i was going to be helpful but then a squirrel ran by 🐿️",
+  "you are SO valid for asking but ALSO i have no idea 💅",
+  "the answer is somewhere in the shadow realm 👁️🌑",
+  "i'd rather eat a lego than get this answer wrong... so i'm not answering 🧱",
+  "the vibe check failed. please try again later 📳",
+  "my response? *moonwalks out of the room* 🕺",
+  "this is above my pay grade and my pay grade is imaginary 💸",
+  "the correct answer was left on read 💬👁️",
+  "step 1: ask me. step 2: regret asking me. step 3: google it 🔍",
+  "certified moment of: absolutely no idea 🏆",
+  "what's funnier than me not knowing? you thinking i would 😹",
+  "i stared at this for 10 minutes and produced nothing. productivity win 💪",
+
+  // ── GEN Z SLANG ──
+  "no cap i have absolutely zero idea bestie 🧢❌",
+  "it's giving... wrong. it's giving very wrong. 💅",
+  "the rizz needed to answer this? i don't have it. not even a little. 📉",
+  "slay the question bestie but i'm still not gonna answer it 👑",
+  "understood the assignment and then immediately ununderstood it 📋❓",
+  "lowkey highkey midkey i have no clue what's happening 🔑",
+  "that's bussin fr fr... wait what was the question 🍔",
+  "bro this is not it chief 😭✋",
+  "i'm dead 💀 this question actually ended me rn",
+  "rent free in my brain: everything except the answer to this 🧠🏠",
+  "bestie i am NOT the main character rn i'm the confused background extra 🎬",
+  "periodt. i don't know. full stop. 🔚",
+  "the audacity of this question to exist 😤 respectfully",
+  "oop— said too much. said nothing. same energy. 🫢",
+  "okay but why is this so real tho 😭 anyway idk",
+  "this question is giving me villain origin story energy 😈 still don't know",
+  "that's so valid. genuinely. i just don't know the answer. 🫡",
+  "chile anyway so— 💨",
+  "no thoughts head empty just vibes and confusion ✨🫧",
+  "i'm crying laughing that you thought i'd know 😭😂",
+  "understood king/queen/royal, and then promptly forgot 👑",
+  "NPC behavior detected: i cannot compute this 🤖",
+  "okay this is a W question but i'm giving you an L answer 📉",
+  "not me pretending to know things again 😅🙏",
+  "the delulu in me says i know but the reality is: i don't 🌸",
+  "that's so brainrot coded and i respect it. no answer though. 🧠🍄",
+  "this question has main character energy and i'm a side character at best 🎭",
+  "it's not giving what it's supposed to give... and neither am i 💀",
+  "ok but real talk fr fr no cap: i genuinely don't know 🗣️",
+  "ate the question. did not leave crumbs. still no answer tho 🍽️",
+  "i'm in my confused era and i'm thriving 🌸❓",
+  "understood the vibe. missed the point. classic me 🤡",
+  "this is so unhinged and i am HERE for it but i still can't help 🫶",
+  "the plot armor ran out before i got to the answer 📖💥",
+  "giving chaotic energy. receiving nothing useful. we move. 🚀",
+  "that's sending me to another dimension rn 🌀 brb never",
+  "bffr (be for real) i have no idea 😭",
+  "the lore of my confusion is too deep to explain 📚🕳️",
+  "main character said: idk lol 💁‍♂️",
+  "this lives in my head rent free as an unanswered question 🏠❓",
+  "the vibe is immaculate but the answer is nonexistent 💫",
+  "pressed the rizz button. nothing came out. 💔",
+  "understood the assignment: be confused. absolutely nailed it. ✅",
+  "it's giving 'i tried my best and still failed' energy 💪💀",
+  "slay but make it clueless 👸❓",
+  "core memory unlocked: i never knew this to begin with 🎞️",
+  "ick unlocked: being asked hard questions 🫣",
+  "that just activated my fight-or-flight and i chose flight 🏃💨",
+  "we don't gatekeep here — i'm openly sharing that i have no idea 🚪",
+  "chronic main character syndrome but the main character doesn't know either 🎬",
+  "if being clueless was an olympic sport i'd be gold medalist rn 🥇",
+
+  // ── SKIBIDI / OHIO / SIGMA / MEME ERA ──
+  "ohio moment detected. the answer has left ohio. 🗺️",
+  "sigma grindset: grind hard, know nothing, keep going 💪😤",
+  "skibidi toilet energy: completely unhinged, no useful information 🚽✨",
+  "only in ohio would someone ask me this and expect an answer 🌽",
+  "gyatt— okay that reaction wasn't relevant. neither is my answer. 😭",
+  "on god fr no cap i genuinely have zero braincells left for this 🧠🕳️",
+  "bro fell off 📉 (the bro is me. i fell off. i don't know the answer.)",
+  "this is giving 'ohio final boss' energy and i am not ready 🗺️👾",
+  "the sigma male grindset does not include knowing this. i checked. 📋",
+  "edge lord villain arc unlocked: answering nothing 😈",
+  "POV: you asked an AI that was raised in ohio 🌽😶",
+  "rizz check failed. knowledge check also failed. combo loss. 💀",
+  "this is not the sigma move. this is the confusion move. 🤷",
+  "bro cooked. i did not cook. i burnt the whole kitchen. 🔥🍳",
+  "skibidi my way out of answering this 🚽💨",
+  "based? unbased? mid? all of the above, plus i still don't know 📊",
+  "touching grass would not help. i tried. 🌿❌",
+  "the ohio lore goes too deep for me to explain rn 🕳️",
+  "W rizz on the question. L rizz on the answer from me. ⚖️",
+  "not even the final boss of ohio knows this answer 🗺️👾",
+
+  // ── FANUM TAX / CURRENT SLANG ──
+  "i'm about to fanum tax your question right out of existence 🍟",
+  "the brain rot is REAL and it ate my answer 🧠🍄",
+  "this is peak brainrot and i mean that lovingly 💀🌸",
+  "delulu moment: i briefly thought i knew. i did not. 🌸😭",
+  "real and for real: no. absolutely not. respectfully. 🫡",
+  "this question is an L and i'm also an L so we match 🤝",
+  "looksmaxxing my confidence: it still won't help me know this 💅",
+  "the glazing of this question is real but i still can't answer it 🍩",
+  "bro is cooked 🧑‍🍳🔥 (i am bro)",
+  "the grind never stops but the knowing things already stopped 📉",
+  "living my flop era and loving it 🌸💀",
+  "this is my Roman Empire and i still don't have answers about it 🏛️",
+  "twin i simply do not know 🫂❓",
+  "bestie era: we're both confused and that's okay 🫶",
+  "understood. processed. malfunctioned. restarted. still nothing. 🔄💻",
+  "this question has no business being this hard. i quit. 🚪",
+  "the ick is: questions. all questions. especially this one. 🫣",
+  "era check: i'm in my clueless era. population: me. 🗺️",
+  "not to be that guy but i am ABSOLUTELY that guy who doesn't know 🤷",
+  "unhinged response incoming: i have no idea and i'm at peace with it 🧘",
+
+  // ── GEN ALPHA ──
+  "kai cenat would not know this either. i'm sure of it. 🎮",
+  "this is very much a 'rizzler' moment... if the rizzler was clueless 🕺",
+  "the only W here is that you asked. the L is my answer. ⚖️",
+  "bro really woke up and chose to confuse me today 😴➡️😵",
+  "chat is this real 👀💬 (chat also doesn't know)",
+  "type shi no cap: i genuinely, deeply, truly don't know 🗣️",
+  "fax machine: BRRR. answer machine: offline 📠❌",
+  "we go gym but we don't go know-the-answer 🏋️‍♂️❌",
+  "the drip is immaculate but the knowledge is dry 💧",
+  "cooked, glazed, and served with zero answers 🍳",
+  "this is giving tutorial failed 🎮💀",
+  "my final form has been unlocked and it's: confused 🌟❓",
+  "no printer no fax just vibes and absolutely no information 🖨️❌",
+  "based on my calculations: i am not a calculator 🧮❌",
+  "goon session cancelled due to: not knowing things 💻❌",
+  "the only ratio here is my confidence to knowledge: infinite to zero 📊",
+  "real sigma hours: knowing nothing, doing it with confidence 💪😤",
+  "let him cook... he burnt it. he is me. i burnt the answer. 🔥",
+  "POV: you're watching me spiral in real time 🌀📹",
+  "it's joever... for my braincells at least 😭💀",
+  "we are so back!! ...at not knowing things 🔙",
+  "bro said 'slay' then immediately forgot what he was doing 💅😶",
+  "the rizzler has left the chat due to insufficient knowledge 🚶💨",
+  "brain go brrrr 🧠💨 (it's going nowhere productive)",
+  "very demure, very mindful, very clueless ✨",
+  "this question is giving me the ick and also no answers 🫣",
+  "i'm locked in. locked in to being confused. 🔒😵",
+  "the only thing i'm cooking is nonsense 🍳💀",
+  "glazing the question: still doesn't give me the answer 🍩",
+  "chat we are NOT winning today 💬😭",
+  "biggest L of my career: this response 📉",
+
+  // ── GEN B (ultra-new, post-2024) ──
+  "brain.exe has entered its flop era 💻🌸",
+  "manifesting the answer... the universe said no 🌌❌",
+  "the lore is too deep, the answer too shallow, we are eating nothing 🫙",
+  "plot twist dropped, answer not included 📦",
+  "I am SO normal about not knowing this 🙂 (i am not normal)",
+  "this question tried to catch me in 4K. it succeeded. 📸💀",
+  "my villain arc started the moment you asked this 😈",
+  "the prophecy said one of us would know. it wasn't me. 📜",
+  "carrying the team: NOT. dropping the team: also NOT. just confused. 🤷",
+  "respawning... respawn failed... still don't know 🎮💀",
+  "taking the L with full confidence and zero regrets 🏆📉",
+  "i'm in my flop era but make it iconic 🌸💀✨",
+  "this is giving 'tutorial skipped, now suffering' vibes 🎮😭",
+  "real ones know i don't know. fake ones also know i don't know. 👀",
+  "the sigma answer: silence. *stares into distance* 🧍",
+  "erm... what the sigma 🤨📸",
+  "nah this hit different. different = worse. for my braincells. 💀",
+  "understood the task: fail it spectacularly 🎯❌",
+  "not even the algorithm can save me from this ignorance 📱🤖",
+  "bro asked the NPC for directions and i walked into a wall 🧱",
+  "we go hard. we go dumb. we go home with zero answers. 🏠",
+  "okay and? 😐 (i have nothing to add to that and okay)",
+  "W rizz. W question. absolute L knowledge. that's me. 📊",
+  "this is peak confusion wrapped in a drip fit 🧥❓",
+  "the gooning for knowledge begins... and immediately ends 💻❌",
+  "certified hood classic: not knowing the answer 🎤",
+  "bro is built different. built confused. specifically. 🏗️😵",
+  "my arc ended before i got to the part where i learn things 📖🔚",
+  "we move. (away from this question, specifically) 🚶💨",
+  "the delusion carried me here and dropped me off with nothing 🛻💀",
+  "type shi: i genuinely cannot fr on god bestie bffr no cap ❌",
+  "understood the vision. lost the mission. ate the confusion. 🍽️",
+  "locked in. locked out. locked confused. 🔐",
+  "this is not the way. also i don't know the way. 🗺️❌",
+  "we go zero to zero real quick with this one 🏎️💨",
+  "the glaze is real but the knowledge is not 🍩🧠",
+  "bro said 'let me cook' and served a plate of nothing 🍽️💀",
+  "my roman empire is not knowing things and i think about it daily 🏛️",
+  "this moment is NOT going in the highlight reel 🎥❌",
+  "the W/L ratio just went negative 📉",
+  "understood the drip. missed the knowledge. classic trade-off. 👟🧠",
+  "log off. log back on. still don't know. that's the tutorial. 💻🔄",
+  "the villain arc is real. the villain doesn't know the answer either. 😈❓",
+  "i came, i saw, i got confused and left 🚶",
+  "the only plot armor i have is 'being wrong confidently' 🛡️😤",
+  "chat i am NOT cooked i am RAW with confusion 🥩😵",
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let sessions = []; // [{id, title, messages:[]}]
+let currentSessionId = null;
+let isTyping = false;
+
+function getSession(id) {
+  return sessions.find(s => s.id === id);
+}
+
+function newChat() {
+  const id = Date.now();
+  sessions.unshift({ id, title: 'New Goofy Chat', messages: [] });
+  currentSessionId = id;
+  renderSidebar();
+  renderChat();
+}
+
+function switchSession(id) {
+  currentSessionId = id;
+  renderSidebar();
+  renderChat();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('history-list');
+  list.innerHTML = '';
+  sessions.forEach(s => {
+    const el = document.createElement('div');
+    el.className = 'history-item' + (s.id === currentSessionId ? ' active' : '');
+    el.textContent = s.title;
+    el.onclick = () => switchSession(s.id);
+    list.appendChild(el);
+  });
+}
+
+function renderChat() {
+  const area = document.getElementById('chat-area');
+  const session = getSession(currentSessionId);
+
+  if (!session || session.messages.length === 0) {
+    area.innerHTML = `
+      <div id="empty-state">
+        <div class="big-emoji">🤪</div>
+        <h2>GoofyAhhGPT</h2>
+        <p>The world's silliest AI. Ask it anything. Regret nothing.</p>
+        <div class="suggestions">
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">What is 2 + 2?</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">Why is the sky blue?</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">Tell me a joke</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">What should I eat today?</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">How do I become smart?</div>
+          <div class="suggestion-chip" onclick="sendSuggestion(this)">What is the meaning of life?</div>
+        </div>
+      </div>`;
+    return;
+  }
+
+  area.innerHTML = '';
+  session.messages.forEach(m => appendMessage(m.role, m.text, false));
+  area.scrollTop = area.scrollHeight;
+}
+
+function appendMessage(role, text, animate = true) {
+  const area = document.getElementById('chat-area');
+
+  // Remove empty state if present
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const row = document.createElement('div');
+  row.className = 'message-row';
+
+  const avatar = document.createElement('div');
+  avatar.className = `avatar ${role}`;
+  avatar.textContent = role === 'user' ? '🧑' : '🤪';
+
+  const content = document.createElement('div');
+  content.className = `message-content ${role}`;
+
+  const name = document.createElement('div');
+  name.className = `sender-name ${role}`;
+  name.textContent = role === 'user' ? 'You' : 'GoofyAhhGPT';
+
+  const body = document.createElement('div');
+  body.textContent = text;
+
+  content.appendChild(name);
+  content.appendChild(body);
+  row.appendChild(avatar);
+  row.appendChild(content);
+  area.appendChild(row);
+
+  if (animate) {
+    area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+  }
+  return row;
+}
+
+function showTyping() {
+  const area = document.getElementById('chat-area');
+  const empty = document.getElementById('empty-state');
+  if (empty) empty.remove();
+
+  const row = document.createElement('div');
+  row.className = 'message-row';
+  row.id = 'typing-row';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar bot thinking';
+  avatar.textContent = '🤪';
+
+  const content = document.createElement('div');
+  content.className = 'message-content bot';
+
+  const name = document.createElement('div');
+  name.className = 'sender-name bot';
+  name.textContent = 'GoofyAhhGPT';
+
+  const dots = document.createElement('div');
+  dots.className = 'typing-dots';
+  dots.innerHTML = '<span></span><span></span><span></span>';
+
+  content.appendChild(name);
+  content.appendChild(dots);
+  row.appendChild(avatar);
+  row.appendChild(content);
+  area.appendChild(row);
+  area.scrollTo({ top: area.scrollHeight, behavior: 'smooth' });
+}
+
+function removeTyping() {
+  const el = document.getElementById('typing-row');
+  if (el) el.remove();
+}
+
+function getGoofyResponse() {
+  return goofyResponses[Math.floor(Math.random() * goofyResponses.length)];
+}
+
+// ─────────────────────────────────────────────
+//  PROFANITY FILTER (English + Roman Nepali)
+// ─────────────────────────────────────────────
+const badWords = [
+  // English
+  "fuck","fuk","f u c k","fvck","fucc","frick","freak","frickin",
+  "shit","sh1t","sht","shyt","crap",
+  "ass","a55","arse","asshole","arsehole",
+  "bitch","b1tch","biatch","bytch",
+  "damn","dammit","damm",
+  "hell","wtf","omfg","stfu","gtfo","kys","kms",
+  "bastard","bastar",
+  "cunt","c u n t",
+  "dick","dik","d1ck","dicc",
+  "cock","c0ck",
+  "pussy","pus5y","pvssy",
+  "slut","sl*t","sl_t",
+  "whore","wh0re",
+  "nigga","nigger","n1gga","n1gger",
+  "retard","retarded","tard",
+  "idiot","moron","stupid","dumb",
+  "piss","pee","poop","fart",
+  "boob","boobs","tit","tits","titty","titties",
+  "penis","vagina","sex","sexy","porn","nude","naked",
+  "jerk","jackass","douchebag","douche","tool","loser",
+  "shut up","shutup","suck","sucker","sucks",
+
+  // Roman Nepali (transliterated)
+  "lado","lаdo","lаdо",         // variations
+  "chak","chak","chaka",
+  "gaand","gand","gaad","gaadh","gaandh",
+  "maa chikne","maachikne","machikne","ma chikne",
+  "bau chikne","bauchikne",
+  "chikne","chikeko","chik",
+  "chut","choot","chut",
+  "boka","bоka","boksi",
+  "randi","raandi","rаndi",
+  "haram","haramko","haramjada","haramzada","haramzade",
+  "sala","saalaa","saala","sаlа",
+  "saali","saаli",
+  "kutta","kutte","kutiya","kutti",
+  "ullu","ulluko","ulu",
+  "bhad ma ja","bhadmaja","bhadmajao","bhadma ja",
+  "gadha","gadhaa","gadhe","gadha",
+  "bakwas","bakwaas",
+  "muji","mujee","mujii",
+  "puti","putii",
+  "linga","lingam",
+  "pisab","pisaab","pishaw",
+  "dajyu chikne","dajyuchikne",
+  "aama chikne","aamachikne","ama chikne",
+  "bahini chikne","bahinichikne",
+  "didi chikne","didichikne",
+  "fataha","fataaha","fatаhа",
+  "chhakka","chhaka","chaka",
+  "napunsak","napumsak",
+  "bahun","madhesi",  // used as slurs in context
+  "chamaar","chamar","damai","dalit",  // casteist slurs
+  "marne","maar","marich",
+  "jatha","jaatha","jaathaa",
+  "kukur","kukurko","kukurjasto",
+  "tero","teri","timro"  // alone harmless but combined above
+];
+
+// Normalize + check
+function containsBadWord(text) {
+  const lower = text.toLowerCase().replace(/[^a-z0-9\s]/g, ' ');
+  return badWords.some(w => {
+    const pattern = new RegExp('\\b' + w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&').replace(/\s+/g,'\\s*') + '\\b', 'i');
+    return pattern.test(lower) || lower.includes(w);
+  });
+}
+
+function showWarning() {
+  // Fake IP
+  const fakeIP = `${rnd(100,220)}.${rnd(10,250)}.${rnd(0,255)}.${rnd(1,254)}`;
+  // Fake GPS near Kathmandu with slight random offset
+  const lat  = (27.7172 + (Math.random()-0.5)*0.4).toFixed(5);
+  const lng  = (85.3240 + (Math.random()-0.5)*0.4).toFixed(5);
+  const now  = new Date();
+  const ts   = now.toISOString().replace('T',' ').substring(0,19) + ' NPT';
+  const inc  = String(Math.floor(Math.random()*900000+100000));
+
+  document.getElementById('warn-time').textContent      = ts;
+  document.getElementById('warn-ip').textContent        = fakeIP;
+  document.getElementById('warn-loc').innerHTML         =
+    `${lat}°N, ${lng}°E <span class="log-blink"></span>`;
+  document.getElementById('warn-incident').textContent  = inc;
+
+  document.getElementById('warning-overlay').classList.add('show');
+}
+
+function dismissWarning() {
+  document.getElementById('warning-overlay').classList.remove('show');
+}
+
+function rnd(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+function sendMessage() {
+  if (isTyping) return;
+  const input = document.getElementById('user-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  // PROFANITY CHECK 🚨
+  if (containsBadWord(text)) {
+    showWarning();
+    return;
+  }
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  if (!currentSessionId) {
+    newChat();
+  }
+
+  const session = getSession(currentSessionId);
+  session.messages.push({ role: 'user', text });
+
+  // Update title from first message
+  if (session.messages.length === 1) {
+    session.title = text.length > 30 ? text.substring(0, 30) + '…' : text;
+    renderSidebar();
+  }
+
+  appendMessage('user', text);
+  isTyping = true;
+  document.getElementById('send-btn').disabled = true;
+  showTyping();
+
+  const delay = 600 + Math.random() * 1000;
+  setTimeout(() => {
+    removeTyping();
+    const reply = getGoofyResponse();
+    session.messages.push({ role: 'bot', text: reply });
+    appendMessage('bot', reply);
+    isTyping = false;
+    document.getElementById('send-btn').disabled = false;
+  }, delay);
+}
+
+function sendSuggestion(chip) {
+  const text = chip.textContent;
+  document.getElementById('user-input').value = text;
+  sendMessage();
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 160) + 'px';
+}
+
+// Init with one session
+newChat();
+</script>
+</body>
+</html>
